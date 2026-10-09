@@ -1,0 +1,6 @@
+.firebase/
+node_modules/
+_source/textbook.txt
+*.log
+.claude/
+*.bat

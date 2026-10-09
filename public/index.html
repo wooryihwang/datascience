@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>데이터 과학 학습사이트</title>
+  <meta name="description" content="고등학교 데이터 과학 교과서를 쉬운 말로 풀어 쓴 계단식 학습 사이트">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#/"><span class="brand-logo">DS</span><span class="brand-name">데이터 과학</span></a>
+      <div class="top-right">
+        <span class="lv-chip" id="lvChip">Lv.1</span>
+        <span class="xp-chip" id="xpChip">0 XP</span>
+        <a class="top-link" href="#/glossary">용어 사전</a>
+        <button class="icon-btn" id="themeBtn" aria-label="화면 테마 바꾸기">🌓</button>
+      </div>
+    </div>
+    <nav class="unit-tabs" id="unitTabs" aria-label="대단원"></nav>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <footer class="foot">고등학교 『데이터 과학』 교과서 내용을 학습용으로 재구성했습니다. · <span id="ver"></span></footer>
+
+  <script src="data/unit1.js"></script>
+  <script src="data/unit2.js"></script>
+  <script src="data/unit3.js"></script>
+  <script src="data/unit4.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

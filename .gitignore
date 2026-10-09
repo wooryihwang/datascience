@@ -4,3 +4,4 @@ _source/textbook.txt
 *.log
 .claude/
 *.bat
+firebase-debug.log

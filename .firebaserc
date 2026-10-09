@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "pen-datascience"
+  },
+  "targets": {
+    "pen-datascience": {
+      "hosting": {
+        "main": [
+          "ai-data-edu"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

@@ -1,7 +1,7 @@
 /* 데이터 과학 학습사이트 — 해시 라우터 + localStorage 진도 관리 */
 (function () {
   'use strict';
-  var VERSION = 'v1.1';
+  var VERSION = 'v1.2';
   var DATA = (window.DS_DATA && window.DS_DATA.units) || [];
   DATA.sort(function (a, b) { return Number(a.id) - Number(b.id); });
 
@@ -154,8 +154,35 @@
   }
 
   // ---------- 레슨 ----------
-  var testState = {};   // lessonId -> {order:[], picks:{}, submitted:bool}
+  var testState = {};   // lessonId -> {qs:[], picks:{}, submitted:bool}
   var gameState = {};   // lessonId -> {terms:[], defs:[], matched:{}, sel:null}
+  var stepPick = {};    // lessonId -> {stepIndex: question}
+  var TEST_N = 10;
+
+  // ---------- 문제 은행 ----------
+  // 계단 확인문제(step=i) + 기존 시험 문제(step 없음) + 문제 은행(window.DS_BANK)
+  var poolCache = {};
+  function lessonPool(l) {
+    if (poolCache[l.id]) return poolCache[l.id];
+    var all = [];
+    l.steps.forEach(function (s, i) { if (s.check) all.push(Object.assign({ step: i }, s.check)); });
+    l.test.forEach(function (q) { all.push(q); });
+    var bank = (window.DS_BANK && window.DS_BANK[l.id]) || [];
+    bank.forEach(function (q) { if (q.step >= 0 && q.step < l.steps.length) all.push(q); });
+    return (poolCache[l.id] = all);
+  }
+  function stepPool(l, i) { return lessonPool(l).filter(function (q) { return q.step === i; }); }
+  function pickStepQuestion(l, i, avoid) {
+    var p = stepPool(l, i);
+    var choices = p.length > 1 ? p.filter(function (q) { return q !== avoid; }) : p;
+    var q = choices[Math.floor(Math.random() * choices.length)];
+    (stepPick[l.id] = stepPick[l.id] || {})[i] = q;
+    return q;
+  }
+  function stepQuestion(l, i) {
+    var cur = stepPick[l.id] && stepPick[l.id][i];
+    return cur || (stepPool(l, i).length ? pickStepQuestion(l, i) : null);
+  }
 
   function viewLesson(id) {
     var ref = LESSON_MAP[id];
@@ -191,13 +218,14 @@
       if (s.code) h += '<pre class="code"><span class="lang">' + esc(s.code.lang || 'python') + '</span><code>' + esc(s.code.src) + '</code></pre>';
       if (s.tip) h += '<div class="tip">' + esc(s.tip) + '</div>';
       if (s.remember && s.remember.length) h += '<div class="remember"><b>✔ 꼭 기억해요</b><ul>' + s.remember.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>';
-      if (s.check) {
+      var cq = stepQuestion(l, i);
+      if (cq) {
         var solved = i < cleared;
-        h += '<div class="quiz" data-step="' + i + '"><div class="q">✅ 확인문제 — ' + (solved ? '해결했어요!' : '맞히면 다음 계단이 열려요') + '</div><div>' + esc(s.check.q) + '</div>';
-        s.check.options.forEach(function (o, oi) {
-          h += '<button class="opt ' + (solved && oi === s.check.answer ? 'right' : '') + '" data-o="' + oi + '" ' + (solved ? 'disabled' : '') + '>' + NUMS[oi] + ' ' + esc(stripNum(o)) + '</button>';
+        h += '<div class="quiz" data-step="' + i + '"><div class="q">✅ 확인문제 — ' + (solved ? '해결했어요!' : '맞히면 다음 계단이 열려요') + ' <span class="muted" style="font-weight:400;font-size:13px">(문제 ' + stepPool(l, i).length + '개 중 무작위)</span></div><div>' + esc(cq.q) + '</div>';
+        cq.options.forEach(function (o, oi) {
+          h += '<button class="opt ' + (solved && oi === cq.answer ? 'right' : '') + '" data-o="' + oi + '" ' + (solved ? 'disabled' : '') + '>' + NUMS[oi] + ' ' + esc(stripNum(o)) + '</button>';
         });
-        h += '<div class="fb">' + (solved ? '<div class="feedback ok">⭕ ' + esc(s.check.explain) + '</div>' : '') + '</div></div>';
+        h += '<div class="fb">' + (solved ? '<div class="feedback ok">⭕ ' + esc(cq.explain) + '</div>' : '') + '</div></div>';
       }
       h += '</section>';
     });
@@ -225,16 +253,17 @@
     // 확인문제 이벤트
     $all('.quiz').forEach(function (qz) {
       var si = Number(qz.getAttribute('data-step'));
-      var s = l.steps[si];
+      var cq = stepQuestion(l, si);
       $all('.opt', qz).forEach(function (btn) {
         btn.onclick = function () {
           var oi = Number(btn.getAttribute('data-o'));
           var fb = $('.fb', qz);
-          if (oi === s.check.answer) {
+          if (oi === cq.answer) {
             btn.classList.add('right');
             $all('.opt', qz).forEach(function (b) { b.disabled = true; });
-            fb.innerHTML = '<div class="feedback ok">⭕ 정답! ' + esc(s.check.explain) + '</div>';
-            if ((S.steps[id] || 0) <= si) {
+            fb.innerHTML = '<div class="feedback ok">⭕ 정답! ' + esc(cq.explain) + '</div>';
+            if ((S.steps[id] || 0) < si) { viewLesson(id); return; }  // 진도가 초기화된 뒤의 옛 화면
+            if ((S.steps[id] || 0) === si) {
               S.steps[id] = si + 1; save(); addXP(10, (si + 1) + '계단 통과');
               setTimeout(function () {
                 viewLesson(id);
@@ -243,8 +272,15 @@
               }, 1100);
             }
           } else {
-            btn.classList.add('wrong'); btn.disabled = true;
-            fb.innerHTML = '<div class="feedback no">❌ 다시 생각해 봐요. 위 설명을 한 번 더 읽고 다른 답을 골라 보세요.</div>';
+            btn.classList.add('wrong');
+            $all('.opt', qz).forEach(function (b) { b.disabled = true; if (Number(b.getAttribute('data-o')) === cq.answer) b.classList.add('right'); });
+            fb.innerHTML = '<div class="feedback no">❌ 아쉬워요. 정답은 ' + NUMS[cq.answer] + '이에요. ' + esc(cq.explain) +
+              '<div style="margin-top:8px"><button class="btn ghost" data-retry="1" style="padding:6px 14px">🔄 다른 문제로 다시 도전</button></div></div>';
+            $('[data-retry]', fb).onclick = function () {
+              pickStepQuestion(l, si, cq);
+              viewLesson(id);
+              var t = $('#step-' + si); if (t) t.querySelector('.quiz').scrollIntoView({ block: 'center' });
+            };
           }
         };
       });
@@ -288,15 +324,17 @@
   function renderTest(l) {
     var box = $('#testBox'); if (!box) return;
     var t = testState[l.id];
-    if (!t) t = testState[l.id] = { order: shuffle(l.test.map(function (q, i) { return i; })), picks: {}, submitted: false };
+    var pool = lessonPool(l);
+    if (!t) t = testState[l.id] = { qs: shuffle(pool).slice(0, TEST_N), picks: {}, submitted: false };
+    var N = t.qs.length;
     var h = '';
+    if (!t.submitted) h += '<p class="muted" style="margin-top:0">문제 은행 ' + pool.length + '문제 중 ' + N + '문제를 무작위로 냈어요. 80점 미만이면 <b>1계단부터 다시</b> 올라가야 해요.</p>';
     if (t.submitted) {
-      var right = t.order.filter(function (qi) { return t.picks[qi] === l.test[qi].answer; }).length;
-      var score = right * 10, pass = score >= 80;
-      h += '<div class="score ' + (pass ? 'pass' : 'fail') + '"><div class="big">' + score + '점</div><div>' + (pass ? '🎉 통과! 이 레슨을 완료했어요.' : '아쉬워요. 80점 이상이면 통과예요. 해설을 읽고 다시 도전해요!') + '</div></div>';
+      var score = testScore(t), pass = score >= 80;
+      h += '<div class="score ' + (pass ? 'pass' : 'fail') + '"><div class="big">' + score + '점</div><div>' + (pass ? '🎉 통과! 이 레슨을 완료했어요.' : '아쉬워요. 80점 이상이면 통과예요.<br><b>1계단부터 새 문제로 다시 올라가요.</b> 아래 해설을 먼저 읽어 보세요.') + '</div></div>';
     }
-    t.order.forEach(function (qi, n) {
-      var q = l.test[qi];
+    t.qs.forEach(function (q, qi) {
+      var n = qi;
       h += '<div class="tq" data-q="' + qi + '"><div class="q">' + (n + 1) + '. ' + esc(q.q) + '</div>';
       q.options.forEach(function (o, oi) {
         var cls = '';
@@ -308,7 +346,8 @@
       h += '</div>';
     });
     var answered = Object.keys(t.picks).length;
-    h += '<div style="text-align:center;margin-top:16px">' + (t.submitted ? '<button class="btn" id="retry">다시 풀기</button>' : '<button class="btn" id="submit" ' + (answered < l.test.length ? 'disabled' : '') + '>채점하기 (' + answered + '/' + l.test.length + ')</button>') + '</div>';
+    var passed = t.submitted && testScore(t) >= 80;
+    h += '<div style="text-align:center;margin-top:16px">' + (t.submitted ? (passed ? '<button class="btn" id="retry">새 문제로 다시 풀기</button>' : '<button class="btn" id="restart">⬆ 1계단부터 다시 시작</button>') : '<button class="btn" id="submit" ' + (answered < N ? 'disabled' : '') + '>채점하기 (' + answered + '/' + N + ')</button>') + '</div>';
     box.innerHTML = h;
     if (!t.submitted) {
       $all('.tq', box).forEach(function (el) {
@@ -319,19 +358,33 @@
             $all('.opt', el).forEach(function (x) { x.classList.remove('picked'); });
             b.classList.add('picked');
             var sb = $('#submit'); var a = Object.keys(t.picks).length;
-            sb.textContent = '채점하기 (' + a + '/' + l.test.length + ')'; sb.disabled = a < l.test.length;
+            sb.textContent = '채점하기 (' + a + '/' + N + ')'; sb.disabled = a < N;
           };
         });
       });
       $('#submit').onclick = function () { t.submitted = true; grade(l, t); renderTest(l); $('#test').scrollIntoView({ behavior: 'smooth' }); };
-    } else {
+    } else if (passed) {
       $('#retry').onclick = function () { delete testState[l.id]; renderTest(l); $('#test').scrollIntoView({ behavior: 'smooth' }); };
+    } else {
+      $('#restart').onclick = function () {
+        delete testState[l.id]; delete gameState[l.id];
+        viewLesson(l.id);
+        var t1 = $('#step-0'); if (t1) t1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
     }
   }
+  function testScore(t) {
+    var right = t.qs.filter(function (q, qi) { return t.picks[qi] === q.answer; }).length;
+    return Math.round(right / t.qs.length * 100);
+  }
   function grade(l, t) {
-    var right = t.order.filter(function (qi) { return t.picks[qi] === l.test[qi].answer; }).length;
-    var score = right * 10;
+    var score = testScore(t);
     S.attempts[l.id] = (S.attempts[l.id] || 0) + 1;
+    if (score < 80) {
+      // 통과 못하면 1계단부터 다시: 계단 진도 초기화 + 새 확인문제
+      S.steps[l.id] = 0; delete stepPick[l.id]; save();
+      toast('1계단부터 다시 도전해요!');
+    }
     var prev = S.done[l.id];
     if (score >= 80) {
       if (!prev) { S.done[l.id] = { best: score, firstTry: S.attempts[l.id] === 1, date: today() }; save(); addXP(50 + (score === 100 ? 30 : 0), '레슨 완료'); }
@@ -360,6 +413,12 @@
 
   // ---------- 업데이트 기록 ----------
   var CHANGELOG = [
+    { v: 'v1.2', title: '3차 — 문제 은행과 재도전 규칙', items: [
+      '레슨마다 문제 은행을 약 40문제로 늘렸어요 (전체 1,200문제 이상).',
+      '계단 확인문제와 마무리 시험이 문제 은행에서 무작위로 나와요. 볼 때마다 문제가 달라져요.',
+      '확인문제를 틀리면 정답과 해설을 보여 주고, 다른 문제로 다시 도전해요.',
+      '마무리 시험에서 80점 미만이면 1계단부터 새 문제로 다시 올라가요.'
+    ] },
     { v: 'v1.1', title: '2차 수정 — 내용 검수', items: [
       '교과서 원문과 대조해 모든 확인문제·시험 문제의 정답과 해설을 검산했어요.',
       '계산 예시, 코드, 용어 정의의 오류를 바로잡고 문체를 해요체로 다듬었어요.',

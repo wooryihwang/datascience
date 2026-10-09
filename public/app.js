@@ -1,7 +1,7 @@
 /* 데이터 과학 학습사이트 — 해시 라우터 + localStorage 진도 관리 */
 (function () {
   'use strict';
-  var VERSION = 'v1.0';
+  var VERSION = 'v1.1';
   var DATA = (window.DS_DATA && window.DS_DATA.units) || [];
   DATA.sort(function (a, b) { return Number(a.id) - Number(b.id); });
 
@@ -358,6 +358,28 @@
     draw('');
   }
 
+  // ---------- 업데이트 기록 ----------
+  var CHANGELOG = [
+    { v: 'v1.1', title: '2차 수정 — 내용 검수', items: [
+      '교과서 원문과 대조해 모든 확인문제·시험 문제의 정답과 해설을 검산했어요.',
+      '계산 예시, 코드, 용어 정의의 오류를 바로잡고 문체를 해요체로 다듬었어요.',
+      '폰 홈 화면에 앱처럼 설치할 수 있게 했어요 (오프라인에서도 마지막으로 본 내용 학습 가능).'
+    ] },
+    { v: 'v1.0', title: '1차 — 전체 단원 공개', items: [
+      '4개 대단원, 32개 레슨을 교과서 내용을 바탕으로 만들었어요.',
+      '레슨마다 이야기 → 계단 → 정리 → 용어 카드 → 10문제 시험 순서로 학습해요.',
+      'XP, 레벨, 배지, 용어 사전, 다크 모드를 넣었어요.'
+    ] }
+  ];
+  function viewChangelog() {
+    renderTabs(null);
+    var h = '<div class="crumb"><a href="#/">데이터 과학</a> › 업데이트 기록</div><h1>🛠️ 업데이트 기록</h1>';
+    CHANGELOG.forEach(function (c) {
+      h += '<section class="card"><h2><span class="pill">' + esc(c.v) + '</span> ' + esc(c.title) + '</h2><ul>' + c.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul></section>';
+    });
+    $('#app').innerHTML = h;
+  }
+
   function notFound() { renderTabs(null); $('#app').innerHTML = '<div class="card"><h2>페이지를 찾을 수 없어요</h2><a class="btn" href="#/">처음으로</a></div>'; }
 
   // ---------- 라우터 ----------
@@ -368,6 +390,7 @@
     else if (parts[0] === 'unit') viewUnit(parts[1]);
     else if (parts[0] === 'lesson') viewLesson(parts[1]);
     else if (parts[0] === 'glossary') viewGlossary();
+    else if (parts[0] === 'changelog') viewChangelog();
     else notFound();
     window.scrollTo(0, 0);
     var on = $('.unit-tabs a.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'center' });
@@ -388,4 +411,7 @@
   window.addEventListener('hashchange', route);
   route();
   checkBadges();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
 })();

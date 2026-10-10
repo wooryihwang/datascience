@@ -6,3 +6,4 @@ _source/textbook.txt
 *.bat
 firebase-debug.log
 _source/aibasic/*.txt
+_source/img_raw/

@@ -208,7 +208,9 @@
 
     // 이야기
     h += '<section class="card story"><h2><span class="sec-label">이야기</span>먼저 읽어 봐요</h2>';
-    h += '<h3>' + esc(l.story.title) + '</h3>' + l.story.paragraphs.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
+    // 삽화: img/story-<레슨id>.webp 가 있으면 오른쪽(폰에서는 위)에 보여 주고, 없으면 글만
+    h += '<div class="story-grid"><div class="story-text"><h3>' + esc(l.story.title) + '</h3>' + l.story.paragraphs.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>';
+    h += '<figure class="story-art"><img src="img/story-' + esc(l.id) + '.webp" alt="' + esc(l.story.title.replace(/^\S+\s/, '')) + ' 장면 그림" onerror="this.closest(\'.story-grid\').classList.add(\'noart\');this.parentNode.remove()"></figure></div>';
     h += '<div class="q">' + esc(l.story.question) + '</div></section>';
 
     // 계단

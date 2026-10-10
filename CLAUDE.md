@@ -32,6 +32,7 @@
 ## 작업 이력
 - 데이터 과학 v1.0 1차: 전체 단원 32레슨 작성 / v1.1 2차: 교과서 대조 내용 검수 + PWA / v1.2 3차: 문제 은행(1,283문제) 무작위 출제와 재시작 규칙 / v1.3: 여러 과목 사이트로 개편
 - 두 과목 글 줄이기(데이터 과학 v1.4, 인공지능 기초 v1.1): 계단 설명은 PPT식 글머리, 이야기는 2~3문단. 도구 `_source/condense.js`, 지침 `_source/CONDENSE_BRIEF.md`
+- 이야기 삽화(데이터 과학 v1.5, 인공지능 기초 v1.2): `public/<과목>/img/story-<레슨id>.webp`(800×600). 엔진이 있으면 이야기 오른쪽에 보여 주고 없으면 글만. 캔바 AI(generate-image)로 생성 — 장면 설명 `_source/story_scenes.json`, 인공지능 기초는 등장인물 기준 그림(캔바 미디어 `MAHXmGwf1_U`)을 참조 이미지로 넣어 인물 일관성 유지. 캔바 디자인 '학습사이트 이야기 삽화'(DAHXmFJzy1M)에 페이지별로 모아 JPG 내보내기 → WebP 변환. 나노 바나나 API 대안 스크립트 `_source/gen_story_images.py`(GEMINI_API_KEY 필요)
 - 인공지능 기초 v1.0: 전체 39레슨 + 문제 은행 + 브라우저 파이썬 실습(부록 활동지 1~7 연결)
 - 버전을 올리면 그 과목 `config.js`의 `version`과 `changelog`(사이트의 업데이트 기록 페이지)를 함께 고친다.
 - 엔진(`common/app.js`)이나 `sw.js`를 고치면 모든 과목에 영향이 간다. 캐시 구조를 바꾸면 `sw.js`의 `CACHE` 이름을 올린다.

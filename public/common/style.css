@@ -142,6 +142,10 @@ a.subject-card:hover { transform: translateY(-2px); border-color: var(--brand); 
 .goals ul { margin: 6px 0 0; padding-left: 20px; }
 .sec-label { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--brand); border-radius: 6px; padding: 1px 8px; margin-right: 6px; vertical-align: 2px; }
 .story p { margin: 0 0 12px; }
+.story-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 42%); gap: 20px; align-items: center; margin-bottom: 12px; }
+.story-grid.noart { grid-template-columns: 1fr; }
+.story-art { margin: 0; }
+.story-art img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 14px; background: var(--surface-2); box-shadow: var(--shadow); }
 .story .q { background: var(--warn-soft); border-radius: 10px; padding: 12px 14px; font-weight: 700; }
 .stairs { display: flex; gap: 6px; margin: 10px 0 4px; }
 .stairs span { flex: 1; text-align: center; font-size: 12px; padding: 6px 0; border-radius: 8px; background: var(--surface-2); color: var(--muted); }
@@ -238,6 +242,8 @@ p code, li code { background: var(--surface-2); border-radius: 5px; padding: 0 5
   .how { grid-template-columns: repeat(2, 1fr); }
   .units { grid-template-columns: 1fr; }
   .subjects { grid-template-columns: 1fr; }
+  .story-grid { grid-template-columns: 1fr; gap: 12px; }
+  .story-art { order: -1; }
   .hub-hero h1 { font-size: 24px; }
   .brand-name { font-size: 15px; }
   .card { padding: 16px; }

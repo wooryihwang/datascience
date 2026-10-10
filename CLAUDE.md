@@ -19,6 +19,7 @@
 - `public/sw.js`, `public/manifest.webmanifest`: 사이트 전체 PWA(폰 홈 화면 설치, 네트워크 우선 캐시)
 
 ## 새 과목 추가하기
+전체 과정(원자료 추출 → 집필 에이전트 → 코딩 실습 검증 → 삽화 → 배포)은 `_source/PLAYBOOK.md`. 개인 스킬 `textbook-study-site`도 같은 과정을 따른다.
 1. `public/aibasic/`을 복사해 `public/<과목id>/` 만들기 → `config.js`의 `id`, `name`, `storageKey`(과목마다 다르게), 문구, `levels` 고치기, `index.html`의 제목·아이콘·로고 고치기
 2. `data/unitN.js`, `data/bankN.js` 작성 후 `index.html`의 `config.js`와 `../common/app.js` 사이에 `<script>`로 추가
 3. `public/subjects.js`에 카드 추가(또는 상태를 `building` → `open`으로), `storageKey`는 config와 같게, 레슨 수는 `lessons`

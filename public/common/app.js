@@ -230,7 +230,7 @@
       var cq = stepQuestion(l, i);
       if (cq) {
         var solved = i < cleared;
-        h += '<div class="quiz" data-step="' + i + '"><div class="q">✅ 확인문제 — ' + (solved ? '해결했어요!' : '맞히면 다음 계단이 열려요') + ' <span class="muted" style="font-weight:400;font-size:13px">(문제 ' + stepPool(l, i).length + '개 중 무작위)</span></div><div>' + esc(cq.q) + '</div>';
+        h += '<div class="quiz" data-step="' + i + '"><div class="q">✅ 확인문제 — ' + (solved ? '해결했어요!' : '맞히면 다음 계단이 열려요') + '</div><div>' + esc(cq.q) + '</div>';
         cq.options.forEach(function (o, oi) {
           h += '<button class="opt ' + (solved && oi === cq.answer ? 'right' : '') + '" data-o="' + oi + '" ' + (solved ? 'disabled' : '') + '>' + NUMS[oi] + ' ' + esc(stripNum(o)) + '</button>';
         });

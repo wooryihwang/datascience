@@ -1,6 +1,6 @@
-# 레슨 데이터 스키마 (public/data/unitN.js)
+# 레슨 데이터 스키마 (public/<과목>/data/unitN.js)
 
-각 대단원은 파일 하나: `public/data/unit1.js` ~ `unit4.js`.
+각 대단원은 파일 하나: `public/<과목>/data/unit1.js` ~ `unit4.js`.
 파일 형식(그대로 지킬 것, 순수 JS, import/export 없음):
 
 ```js

@@ -1,7 +1,12 @@
-/* 데이터 과학 학습사이트 — 해시 라우터 + localStorage 진도 관리 */
+/* 과목 공통 학습 엔진 — 해시 라우터 + localStorage 진도 관리
+   과목별 설정은 각 과목 폴더의 config.js(window.SUBJECT), 레슨 데이터는 data/*.js(window.DS_DATA, window.DS_BANK) */
 (function () {
   'use strict';
-  var VERSION = 'v1.2';
+  var SUB = window.SUBJECT || {};
+  var NAME = SUB.name || '학습';
+  var VERSION = SUB.version || 'v1.0';
+  var PAGES_LABEL = SUB.pagesLabel == null ? '교과서' : SUB.pagesLabel;
+  function pagesText(l) { return l.pages ? (PAGES_LABEL ? PAGES_LABEL + ' ' : '') + l.pages : ''; }
   var DATA = (window.DS_DATA && window.DS_DATA.units) || [];
   DATA.sort(function (a, b) { return Number(a.id) - Number(b.id); });
 
@@ -23,7 +28,7 @@
   }
 
   // ---------- 저장 ----------
-  var KEY = 'ds-progress-v1';
+  var KEY = SUB.storageKey || ('progress-' + (SUB.id || 'default'));
   function blank() { return { xp: 0, done: {}, steps: {}, terms: {}, attempts: {}, badges: {}, lastDay: '', streak: 0 }; }
   var S = blank();
   try { var raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) {}
@@ -39,9 +44,9 @@
     S.lastDay = t; save();
   })();
 
-  var LEVELS = [
-    { xp: 0, name: '새싹' }, { xp: 150, name: '수집가' }, { xp: 400, name: '탐색가' },
-    { xp: 800, name: '분석가' }, { xp: 1300, name: '모델러' }, { xp: 2000, name: '데이터 과학자' }
+  var LEVELS = SUB.levels || [
+    { xp: 0, name: '새싹' }, { xp: 150, name: '탐색가' }, { xp: 400, name: '도전자' },
+    { xp: 800, name: '실력자' }, { xp: 1300, name: '고수' }, { xp: 2000, name: '마스터' }
   ];
   function level() {
     var i = 0;
@@ -106,9 +111,9 @@
     var next = LESSONS.filter(function (l) { return !S.done[l.id]; })[0] || LESSONS[0];
     var lv = level();
     var h = '';
-    h += '<section class="hero"><div class="eyebrow">이야기로 시작해서, 계단처럼 한 칸씩</div>';
-    h += '<h1>고등학교 데이터 과학</h1>';
-    h += '<p>교과서를 쉬운 말로 풀어 다시 썼어요. 레슨을 깰 때마다 XP를 모으고 배지를 얻어요. (' + doneN + '/' + LESSONS.length + ' 레슨 완료)</p>';
+    h += '<section class="hero"><div class="eyebrow">' + esc(SUB.eyebrow || '이야기로 시작해서, 계단처럼 한 칸씩') + '</div>';
+    h += '<h1>' + esc(SUB.heroTitle || NAME) + '</h1>';
+    h += '<p>' + esc(SUB.heroDesc || '레슨을 깰 때마다 XP를 모으고 배지를 얻어요.') + ' (' + doneN + '/' + LESSONS.length + ' 레슨 완료)</p>';
     if (next) h += '<a class="btn" href="#/lesson/' + next.id + '">' + (doneN ? '이어서 학습하기 →' : '첫 레슨 시작하기 →') + '</a>';
     h += '</section>';
     h += '<div class="how"><div><b>📖</b>① 짧은 이야기로<br>궁금증 만들기</div><div><b>🪜</b>② 계단 오르며<br>문제를 풀어요</div><div><b>🧩</b>③ 용어 카드를<br>짝지어요</div><div><b>🏁</b>④ 10문제 시험<br>80점이면 통과!</div></div>';
@@ -123,7 +128,7 @@
       h += '<div class="bar"><i style="width:' + (ls.length ? d / ls.length * 100 : 0) + '%"></i></div><div class="muted" style="font-size:13px;margin-top:4px">' + d + '/' + ls.length + ' 레슨 완료</div></a>';
     });
     h += '</div>';
-    if (!DATA.length) h += '<p class="card">콘텐츠를 준비하고 있어요.</p>';
+    if (!DATA.length) h += '<p class="card">🛠️ 콘텐츠를 준비하고 있어요. 조금만 기다려 주세요!</p>';
     h += '<p style="text-align:center;margin-top:28px"><button class="btn ghost" id="resetBtn">기록 모두 지우기</button></p>';
     $('#app').innerHTML = h;
     $('#resetBtn').onclick = function () {
@@ -136,7 +141,7 @@
     var u = DATA.filter(function (x) { return x.id === id; })[0];
     if (!u) return notFound();
     renderTabs(u.id);
-    var h = '<div class="crumb"><a href="#/">데이터 과학</a> › ' + esc(u.roman + '. ' + u.title) + '</div>';
+    var h = '<div class="crumb"><a href="#/">' + esc(NAME) + '</a> › ' + esc(u.roman + '. ' + u.title) + '</div>';
     h += '<h1>' + esc(u.icon + ' ' + u.roman + '. ' + u.title) + '</h1><p class="muted">' + esc(u.desc) + '</p>';
     if (u.question) h += '<div class="goals"><b>💬 핵심 질문</b><div>' + esc(u.question) + '</div></div>';
     u.chapters.forEach(function (c, ci) {
@@ -144,7 +149,7 @@
       c.lessons.forEach(function (l) {
         var d = S.done[l.id];
         h += '<a class="lesson-row ' + (d ? 'done' : '') + '" href="#/lesson/' + l.id + '"><span class="num">' + (d ? '✓' : (LESSON_MAP[l.id].index + 1)) + '</span>';
-        h += '<span class="t">' + esc(l.title) + '<small>' + esc(l.storyTitle || '') + ' · 교과서 ' + esc(l.pages || '') + '</small></span>';
+        h += '<span class="t">' + esc(l.title) + '<small>' + esc(l.storyTitle || '') + (pagesText(l) ? ' · ' + esc(pagesText(l)) : '') + '</small></span>';
         h += d ? '<span class="pill ok">' + d.best + '점</span>' : '<span class="pill">' + (S.steps[l.id] || 0) + '/' + l.steps.length + '계단</span>';
         h += '</a>';
       });
@@ -191,10 +196,10 @@
     renderTabs(u.id);
     var cleared = S.steps[id] || 0;
     var allClear = cleared >= l.steps.length;
-    var h = '<div class="crumb"><a href="#/">데이터 과학</a> › <a href="#/unit/' + u.id + '">' + esc(u.roman + '. ' + u.title) + '</a></div>';
+    var h = '<div class="crumb"><a href="#/">' + esc(NAME) + '</a> › <a href="#/unit/' + u.id + '">' + esc(u.roman + '. ' + u.title) + '</a></div>';
     h += '<div class="muted" style="font-weight:700;color:var(--brand)">' + esc(c.title) + '</div>';
     h += '<h1>' + esc(l.title) + '</h1>';
-    h += '<div class="muted">' + esc(l.storyTitle || '') + '</div><div class="muted" style="font-size:13px">교과서 ' + esc(l.pages || '') + (S.done[id] ? ' · <span class="pill ok">완료 ' + S.done[id].best + '점</span>' : '') + '</div>';
+    h += '<div class="muted">' + esc(l.storyTitle || '') + '</div><div class="muted" style="font-size:13px">' + esc(pagesText(l)) + (S.done[id] ? ' · <span class="pill ok">완료 ' + S.done[id].best + '점</span>' : '') + '</div>';
     h += '<div class="goals"><b>🎯 이번 레슨의 목표</b><ul>' + l.goals.map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('') + '</ul></div>';
 
     // 이야기
@@ -399,8 +404,8 @@
     var items = [];
     LESSONS.forEach(function (l) { l.terms.forEach(function (t) { items.push({ term: t.term, def: t.def, id: l.id, title: l.title }); }); });
     items.sort(function (a, b) { return a.term.localeCompare(b.term, 'ko'); });
-    var h = '<div class="crumb"><a href="#/">데이터 과학</a> › 용어 사전</div><h1>📚 용어 사전</h1><p class="muted">모든 레슨의 핵심 용어 ' + items.length + '개를 모았어요.</p>';
-    h += '<input class="search" id="q" type="search" placeholder="용어나 뜻으로 찾기 (예: 결측치, 상관)" aria-label="용어 검색"><div id="glist"></div>';
+    var h = '<div class="crumb"><a href="#/">' + esc(NAME) + '</a> › 용어 사전</div><h1>📚 용어 사전</h1><p class="muted">모든 레슨의 핵심 용어 ' + items.length + '개를 모았어요.</p>';
+    h += '<input class="search" id="q" type="search" placeholder="' + esc(SUB.glossaryHint || '용어나 뜻으로 찾기') + '" aria-label="용어 검색"><div id="glist"></div>';
     $('#app').innerHTML = h;
     function draw(q) {
       q = (q || '').trim().toLowerCase();
@@ -412,27 +417,11 @@
   }
 
   // ---------- 업데이트 기록 ----------
-  var CHANGELOG = [
-    { v: 'v1.2', title: '3차 — 문제 은행과 재도전 규칙', items: [
-      '레슨마다 문제 은행을 약 40문제로 늘렸어요 (전체 1,200문제 이상).',
-      '계단 확인문제와 마무리 시험이 문제 은행에서 무작위로 나와요. 볼 때마다 문제가 달라져요.',
-      '확인문제를 틀리면 정답과 해설을 보여 주고, 다른 문제로 다시 도전해요.',
-      '마무리 시험에서 80점 미만이면 1계단부터 새 문제로 다시 올라가요.'
-    ] },
-    { v: 'v1.1', title: '2차 수정 — 내용 검수', items: [
-      '교과서 원문과 대조해 모든 확인문제·시험 문제의 정답과 해설을 검산했어요.',
-      '계산 예시, 코드, 용어 정의의 오류를 바로잡고 문체를 해요체로 다듬었어요.',
-      '폰 홈 화면에 앱처럼 설치할 수 있게 했어요 (오프라인에서도 마지막으로 본 내용 학습 가능).'
-    ] },
-    { v: 'v1.0', title: '1차 — 전체 단원 공개', items: [
-      '4개 대단원, 32개 레슨을 교과서 내용을 바탕으로 만들었어요.',
-      '레슨마다 이야기 → 계단 → 정리 → 용어 카드 → 10문제 시험 순서로 학습해요.',
-      'XP, 레벨, 배지, 용어 사전, 다크 모드를 넣었어요.'
-    ] }
-  ];
+  var CHANGELOG = SUB.changelog || [];
   function viewChangelog() {
     renderTabs(null);
-    var h = '<div class="crumb"><a href="#/">데이터 과학</a> › 업데이트 기록</div><h1>🛠️ 업데이트 기록</h1>';
+    var h = '<div class="crumb"><a href="#/">' + esc(NAME) + '</a> › 업데이트 기록</div><h1>🛠️ 업데이트 기록</h1>';
+    if (!CHANGELOG.length) h += '<p class="muted">아직 기록이 없어요.</p>';
     CHANGELOG.forEach(function (c) {
       h += '<section class="card"><h2><span class="pill">' + esc(c.v) + '</span> ' + esc(c.title) + '</h2><ul>' + c.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul></section>';
     });
@@ -465,12 +454,17 @@
     try { localStorage.setItem('ds-theme', nx); } catch (e) {}
   };
 
+  // 과목 이름·로고·바닥글을 설정에서 채움
+  document.title = SUB.title || (NAME + ' 학습사이트');
+  if ($('#brandLogo') && SUB.logo) $('#brandLogo').textContent = SUB.logo;
+  if ($('#brandName')) $('#brandName').textContent = NAME;
+  if ($('#footText') && SUB.footer) $('#footText').textContent = SUB.footer + ' · ';
   $('#ver').textContent = VERSION;
   updateTop();
   window.addEventListener('hashchange', route);
   route();
   checkBadges();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('sw.js').catch(function () {});
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
   }
 })();

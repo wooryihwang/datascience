@@ -3,43 +3,81 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>데이터 과학 학습사이트</title>
-  <meta name="description" content="고등학교 데이터 과학 교과서를 쉬운 말로 풀어 쓴 계단식 학습 사이트">
+  <script>
+    // 예전 주소(#/lesson/…, #/unit/… 등)는 데이터 과학으로 보냄
+    if (/^#\//.test(location.hash) && location.hash !== '#/') location.replace('datascience/' + location.hash);
+  </script>
+  <title>AI·데이터 교육 학습사이트</title>
+  <meta name="description" content="고등학교 데이터 과학, 인공지능 기초, 정보 교과서를 쉬운 말로 풀어 쓴 계단식 학습 사이트">
   <meta name="theme-color" content="#4f46e5">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎒</text></svg>">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="데이터 과학">
+  <meta name="apple-mobile-web-app-title" content="AI·데이터 교육">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="common/style.css">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="#/"><span class="brand-logo">DS</span><span class="brand-name">데이터 과학</span></a>
+      <a class="brand" href="./"><span class="brand-logo">AI·D</span><span class="brand-name">AI·데이터 교육</span></a>
       <div class="top-right">
-        <span class="lv-chip" id="lvChip">Lv.1</span>
-        <span class="xp-chip" id="xpChip">0 XP</span>
-        <a class="top-link" href="#/glossary">용어 사전</a>
         <button class="icon-btn" id="themeBtn" aria-label="화면 테마 바꾸기">🌓</button>
       </div>
     </div>
-    <nav class="unit-tabs" id="unitTabs" aria-label="대단원"></nav>
   </header>
-  <main id="app" tabindex="-1"></main>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <footer class="foot">고등학교 『데이터 과학』 교과서 내용을 학습용으로 재구성했습니다. · <a href="#/changelog" id="ver"></a></footer>
+  <main id="app" tabindex="-1">
+    <section class="hub-hero">
+      <div class="eyebrow">이야기로 시작해서, 계단처럼 한 칸씩</div>
+      <h1>AI·데이터 교육 학습사이트</h1>
+      <p>교과서를 쉬운 말로 풀어 다시 썼어요. 공부할 과목을 골라요. 학습 기록은 과목마다 따로 이 기기에 저장돼요.</p>
+    </section>
+    <h2 style="margin-top:24px">과목</h2>
+    <div class="subjects" id="subjects"></div>
+  </main>
+  <footer class="foot">고등학교 교과서 내용을 학습용으로 재구성했습니다.</footer>
 
-  <script src="data/unit1.js"></script>
-  <script src="data/unit2.js"></script>
-  <script src="data/unit3.js"></script>
-  <script src="data/unit4.js"></script>
-  <script src="data/bank1.js"></script>
-  <script src="data/bank2.js"></script>
-  <script src="data/bank3.js"></script>
-  <script src="data/bank4.js"></script>
-  <script src="app.js"></script>
+  <script src="subjects.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function progress(key) {
+        try { var p = JSON.parse(localStorage.getItem(key) || 'null'); return p ? { done: Object.keys(p.done || {}).length, xp: p.xp || 0 } : null; } catch (e) { return null; }
+      }
+      var LABEL = { open: '공부하러 가기 →', building: '들어가 보기 →', soon: '준비 중' };
+      var PILL = { building: '<span class="pill warn">만드는 중</span>', soon: '<span class="pill muted-pill">준비 중</span>' };
+      document.getElementById('subjects').innerHTML = (window.SUBJECTS || []).map(function (s) {
+        var p = progress(s.storageKey);
+        var tagName = s.status === 'soon' ? 'div' : 'a';
+        var h = '<' + tagName + ' class="subject-card ' + s.status + '"' + (s.status === 'soon' ? ' aria-disabled="true"' : ' href="' + esc(s.path) + '"') + '>';
+        h += '<div class="sc-top"><span class="sc-tag">' + esc(s.tag) + '</span>' + (PILL[s.status] || '') + '</div>';
+        h += '<div class="sc-title"><span class="ic">' + esc(s.icon) + '</span><h3>' + esc(s.name) + '</h3></div>';
+        h += '<p>' + esc(s.desc) + '</p>';
+        if (p && (p.done || p.xp)) {
+          h += '<div class="muted sc-prog">내 기록 · ' + p.done + (s.lessons ? '/' + s.lessons : '') + ' 레슨 완료 · ' + p.xp + ' XP</div>';
+          if (s.lessons) h += '<div class="bar"><i style="width:' + Math.min(100, p.done / s.lessons * 100) + '%"></i></div>';
+        }
+        h += '<div class="sc-cta">' + LABEL[s.status] + '</div></' + tagName + '>';
+        return h;
+      }).join('');
+
+      try { var th = localStorage.getItem('ds-theme'); if (th) document.documentElement.setAttribute('data-theme', th); } catch (e) {}
+      document.getElementById('themeBtn').onclick = function () {
+        var cur = document.documentElement.getAttribute('data-theme');
+        var dark = cur ? cur === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var nx = dark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nx);
+        try { localStorage.setItem('ds-theme', nx); } catch (e) {}
+      };
+      if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js').catch(function () {});
+    })();
+  </script>
 </body>
 </html>

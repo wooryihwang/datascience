@@ -1,6 +1,6 @@
-# 문제 은행 스키마 (public/data/bankN.js)
+# 문제 은행 스키마 (public/<과목>/data/bankN.js)
 
-레슨 데이터(unitN.js)는 수정하지 않는다. 문제 은행은 별도 파일 `public/data/bank1.js` ~ `bank4.js`.
+레슨 데이터(unitN.js)는 수정하지 않는다. 문제 은행은 별도 파일 `public/<과목>/data/bank1.js` ~ `bank4.js`.
 
 ```js
 window.DS_BANK = window.DS_BANK || {};

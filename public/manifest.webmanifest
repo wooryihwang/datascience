@@ -1,15 +1,25 @@
 {
-  "name": "고등학교 데이터 과학",
-  "short_name": "데이터 과학",
-  "description": "교과서를 쉬운 말로 풀어 쓴 계단식 데이터 과학 학습",
-  "start_url": "./",
-  "scope": "./",
+  "name": "AI·데이터 교육 학습사이트",
+  "short_name": "AI·데이터 교육",
+  "description": "데이터 과학·인공지능 기초·정보를 계단식으로 공부해요",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f6f7fb",
   "theme_color": "#4f46e5",
   "lang": "ko",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

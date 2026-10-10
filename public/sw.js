@@ -1,5 +1,5 @@
 // 네트워크 우선, 실패하면 캐시 (오프라인에서도 마지막으로 본 내용 학습 가능)
-var CACHE = 'ds-cache-v2';
+var CACHE = 'ds-cache-v3';
 self.addEventListener('install', function (e) { self.skipWaiting(); });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (ks) {
@@ -15,7 +15,7 @@ self.addEventListener('fetch', function (e) {
       caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
       return res;
     }).catch(function () {
-      return caches.match(e.request).then(function (r) { return r || caches.match('./'); });
+      return caches.match(e.request).then(function (r) { return r || caches.match('/'); });
     })
   );
 });

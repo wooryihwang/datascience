@@ -9,10 +9,10 @@ window.SUBJECTS = [
     lessons: 32, storageKey: 'ds-progress-v1'
   },
   {
-    id: 'aibasic', path: 'aibasic/', status: 'building',
+    id: 'aibasic', path: 'aibasic/', status: 'open',
     icon: '🤖', name: '인공지능 기초', tag: '고등 진로선택 · 단원별 학습',
-    desc: '인공지능이 무엇이고 어떻게 배우는지, 문제를 어떻게 해결하는지 차근차근 알아봐요.',
-    storageKey: 'aibasic-progress-v1'
+    desc: '탐색과 추론, 기계학습과 딥러닝, AI 윤리, 프로젝트까지. 4개 대단원 39레슨을 이야기와 계단 문제, 브라우저 파이썬 실습으로 공부해요.',
+    lessons: 39, storageKey: 'aibasic-progress-v1'
   },
   {
     id: 'info', path: 'info/', status: 'soon',

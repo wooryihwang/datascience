@@ -5,3 +5,4 @@ _source/textbook.txt
 .claude/
 *.bat
 firebase-debug.log
+_source/aibasic/*.txt

@@ -55,3 +55,25 @@ window.DS_DATA.units.push({
 - 교사용 교과서의 '지도 Tip', '교수·학습 자료', 답안 예시, 선택지 문항은 문제 출제와 해설에 참고한다.
 - 문자열 안의 큰따옴표는 이스케이프하거나 작은따옴표/「」를 사용. 유효한 JS여야 한다 (`node -e "require('./unit1.js')"` 대신 `node --check` 로 문법 검사).
 - 정답 index는 0~3으로 고르게 분산.
+
+## 코딩 실습 `lab` (선택, 레슨에 하나)
+레슨 객체에 `lab`을 넣으면 계단 아래에 "🧪 실습" 칸이 생긴다(잠금 없음, 선택 활동). 실습 칸마다 첫 실행 성공 시 +5 XP.
+
+```js
+lab: {
+  title: "붓꽃을 분류하는 모델 만들기",
+  worksheet: "부록 활동지 2 · 교과서 74쪽",   // 선택: 연결된 활동지
+  intro: ["<p>무엇을 할지 1~2문단</p>"],
+  tasks: [                                   // 3~6개, 노트북 셀처럼 위에서부터 차례로 실행
+    {
+      title: "데이터 불러오기",
+      body: ["<p>이 칸에서 할 일 설명</p>"],
+      code: { lang: "python", src: "...", run: true },   // run:true → 브라우저에서 바로 실행(Pyodide)
+      ask: "생각해 볼 질문 (선택)"
+    }
+  ]
+}
+```
+- `run: true` 코드 조건: 파이썬 표준 라이브러리, numpy, pandas, scikit-learn, matplotlib만. 파일 읽기·인터넷 내려받기·input() 금지. 데이터는 코드 안에 직접 만들거나(`pd.DataFrame`, `io.StringIO`) scikit-learn 내장 데이터(`load_iris`, `load_digits`, `load_breast_cancer`, `load_wine`, `load_diabetes`)를 쓴다. `fetch_*` 금지. 그래프 글자는 영어(한글 글꼴 없음). 마지막 줄이 식이면 그 값이 출력된다(주피터처럼). 앞 칸의 변수는 뒤 칸에서 그대로 쓸 수 있다.
+- 텐서플로·케라스·folium·코랩 파일 업로드처럼 브라우저에서 안 되는 코드는 `run` 없이 넣는다 → 복사 버튼 + "코랩에 붙여 넣어 실행" 안내가 나온다.
+- 계단 `steps[].code`에도 `run: true`를 쓸 수 있다.

@@ -157,6 +157,25 @@ th { background: var(--surface-2); }
 pre.code { background: var(--code-bg); color: var(--code-text); border-radius: 10px; padding: 14px; overflow-x: auto; font-size: 13.5px; line-height: 1.55; }
 pre.code .lang { display: block; font-size: 11px; color: #9aa3c7; margin-bottom: 6px; }
 code { font-family: Consolas, "D2Coding", monospace; }
+
+/* code box (복사·실행) & lab */
+.code-box { margin: 12px 0; }
+.code-box pre.code { margin: 0; }
+.code-edit-wrap { background: var(--code-bg); border-radius: 10px; padding: 10px 14px 6px; }
+.code-edit-wrap .lang { display: block; font-size: 11px; color: #9aa3c7; margin-bottom: 4px; }
+.code-edit { display: block; width: 100%; background: transparent; color: var(--code-text); border: none; outline: none; resize: vertical; font: 13.5px/1.55 Consolas, "D2Coding", monospace; white-space: pre; overflow-x: auto; tab-size: 4; }
+.code-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.code-actions .btn { padding: 6px 14px; font-size: 14px; }
+.code-note { font-size: 12.5px; }
+.code-out { margin-top: 6px; border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 0 10px 10px 0; background: var(--surface-2); padding: 8px 12px; overflow-x: auto; }
+.code-out.err { border-left-color: var(--bad); background: var(--bad-soft); }
+.code-out pre { margin: 0; font: 13px/1.5 Consolas, "D2Coding", monospace; white-space: pre; }
+.code-out img { display: block; max-width: 100%; margin-top: 8px; background: #fff; border-radius: 6px; }
+.lab { border-top: 4px solid var(--ok); }
+.lab-label { background: var(--ok); }
+.lab-task { border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 14px; }
+.lab-task h3 { font-size: 17px; }
+.lab-ask { background: var(--brand-soft); border-radius: 10px; padding: 10px 14px; margin: 10px 0 4px; font-size: 15px; }
 p code, li code { background: var(--surface-2); border-radius: 5px; padding: 0 5px; font-size: .92em; }
 .tip { background: var(--warn-soft); border-radius: 10px; padding: 10px 14px; margin: 12px 0; font-size: 15px; }
 .remember { border-left: 4px solid var(--ok); background: var(--ok-soft); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 12px 0; }

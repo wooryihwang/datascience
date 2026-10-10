@@ -29,7 +29,7 @@
 
   // ---------- 저장 ----------
   var KEY = SUB.storageKey || ('progress-' + (SUB.id || 'default'));
-  function blank() { return { xp: 0, done: {}, steps: {}, terms: {}, attempts: {}, badges: {}, lastDay: '', streak: 0 }; }
+  function blank() { return { xp: 0, done: {}, steps: {}, terms: {}, attempts: {}, badges: {}, labs: {}, lastDay: '', streak: 0 }; }
   var S = blank();
   try { var raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) {}
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -65,6 +65,10 @@
     { id: 'streak', icon: '🔥', name: '3일 연속', test: function () { return S.streak >= 3; } },
     { id: 'grad', icon: '🎓', name: '졸업', test: function () { return LESSONS.length && LESSONS.every(function (l) { return S.done[l.id]; }); } }
   ];
+  // 코딩 실습이 있는 과목에만 실습 배지를 보여 줌
+  if (LESSONS.some(function (l) { return l.lab; })) {
+    BADGES.splice(BADGES.length - 1, 0, { id: 'coder', icon: '🧪', name: '코딩 실습가', test: function () { return Object.keys(S.labs || {}).length >= 5; } });
+  }
   function checkBadges() {
     BADGES.forEach(function (b) {
       if (!S.badges[b.id] && b.test()) { S.badges[b.id] = today(); save(); toast(b.icon + ' 배지 획득: ' + b.name); }
@@ -220,7 +224,7 @@
         h += '<div class="tbl-wrap"><table><thead><tr>' + s.table.head.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>';
         h += s.table.rows.map(function (r) { return '<tr>' + r.map(function (x) { return '<td>' + esc(x) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
       }
-      if (s.code) h += '<pre class="code"><span class="lang">' + esc(s.code.lang || 'python') + '</span><code>' + esc(s.code.src) + '</code></pre>';
+      if (s.code) h += codeBlock(s.code, id + ':s' + i);
       if (s.tip) h += '<div class="tip">' + esc(s.tip) + '</div>';
       if (s.remember && s.remember.length) h += '<div class="remember"><b>✔ 꼭 기억해요</b><ul>' + s.remember.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>';
       var cq = stepQuestion(l, i);
@@ -234,6 +238,9 @@
       }
       h += '</section>';
     });
+
+    // 코딩 실습 (선택, 잠금 없음)
+    if (l.lab) h += renderLab(l);
 
     // 정리
     h += '<section class="card ' + (allClear ? '' : 'step locked') + '"><h2><span class="sec-label">정리</span>한 줄로 다시 보기</h2>';
@@ -292,6 +299,125 @@
     });
     if (allClear) { renderGame(l); renderTest(l); }
   }
+
+  // ---------- 코드 블록 · 코딩 실습 ----------
+  // run:true 인 코드는 고쳐서 브라우저에서 바로 실행(Pyodide). 나머지는 복사해서 코랩에서 실행.
+  var CODES = {};     // key -> 원래 코드
+  var EDITS = {};     // key -> 학생이 고친 코드 (화면을 다시 그려도 유지)
+  function codeBlock(code, key) {
+    CODES[key] = code.src;
+    var lang = code.lang || 'python';
+    var h = '<div class="code-box" data-key="' + esc(key) + '">';
+    if (code.run) {
+      var src = EDITS[key] != null ? EDITS[key] : code.src;
+      var rows = Math.min(24, Math.max(3, src.split('\n').length + 1));
+      h += '<div class="code-edit-wrap"><span class="lang">' + esc(lang) + ' · 고쳐서 실행해 봐요</span><textarea class="code-edit" spellcheck="false" autocapitalize="off" autocomplete="off" rows="' + rows + '" aria-label="파이썬 코드 편집">' + esc(src) + '</textarea></div>';
+    } else {
+      h += '<pre class="code"><span class="lang">' + esc(lang) + '</span><code>' + esc(code.src) + '</code></pre>';
+    }
+    h += '<div class="code-actions">';
+    if (code.run) h += '<button class="btn" data-run>▶ 실행</button><button class="btn ghost" data-reset>↺ 처음 코드로</button>';
+    h += '<button class="btn ghost" data-copy>📋 복사</button>';
+    if (!code.run && lang === 'python') h += '<span class="muted code-note">코랩(Colab)에 붙여 넣어 실행해요</span>';
+    h += '</div><div class="code-out" hidden></div></div>';
+    return h;
+  }
+  function renderLab(l) {
+    var lab = l.lab;
+    var h = '<section class="card lab" id="lab"><h2><span class="sec-label lab-label">실습</span>' + esc(lab.title) + '</h2>';
+    if (lab.worksheet) h += '<div class="pill" style="margin-bottom:8px">📄 ' + esc(lab.worksheet) + '</div>';
+    h += (lab.intro || []).join('');
+    if (lab.tasks.some(function (t) { return t.code && t.code.run; })) h += '<div class="tip">💻 ▶ 실행을 누르면 이 화면에서 파이썬이 돌아가요. 처음 한 번은 준비하는 데 10~20초 걸려요. 위 칸부터 차례로 실행해요 (앞 칸에서 만든 변수를 뒤 칸에서 써요).</div>';
+    lab.tasks.forEach(function (t, ti) {
+      var key = l.id + ':lab' + ti;
+      h += '<div class="lab-task"><h3>' + (S.labs[key] ? '✅ ' : '') + (ti + 1) + '. ' + esc(t.title) + '</h3>' + (t.body || []).join('');
+      if (t.code) h += codeBlock(t.code, key);
+      if (t.ask) h += '<div class="lab-ask"><b>✏️ 생각해 봐요</b> ' + esc(t.ask) + '</div>';
+      h += '</div>';
+    });
+    return h + '</section>';
+  }
+
+  var pyReady = null;
+  var PYODIDE = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+  function getPy() {
+    if (!pyReady) {
+      pyReady = new Promise(function (res, rej) {
+        var sc = document.createElement('script'); sc.src = PYODIDE + 'pyodide.js';
+        sc.onload = function () {
+          window.loadPyodide({ indexURL: PYODIDE }).then(function (py) {
+            py.runPython("import warnings\nwarnings.filterwarnings('ignore')");   // 학생 화면에 경고문 숨김
+            res(py);
+          }, rej);
+        };
+        sc.onerror = function () { rej(new Error('파이썬 실행기를 불러오지 못했어요. 인터넷 연결을 확인해요.')); };
+        document.head.appendChild(sc);
+      });
+      pyReady.catch(function () { pyReady = null; });
+    }
+    return pyReady;
+  }
+  var running = false;
+  function runPython(key, src, out, btn) {
+    if (running) { toast('다른 코드가 실행 중이에요'); return; }
+    running = true; btn.disabled = true;
+    out.hidden = false; out.className = 'code-out'; out.textContent = '⏳ 파이썬 준비 중… (처음 한 번은 10~20초)';
+    var text = '';
+    getPy().then(function (py) {
+      out.textContent = '⏳ 실행 중…';
+      py.setStdout({ batched: function (x) { text += x + '\n'; } });
+      py.setStderr({ batched: function (x) { text += x + '\n'; } });
+      return py.loadPackagesFromImports(src).then(function () {
+        if (/matplotlib/.test(src)) py.runPython("import matplotlib\nmatplotlib.use('AGG')");
+        return py.runPythonAsync(src);
+      }).then(function (r) {
+        if (r !== undefined && r !== null) { text += String(r) + '\n'; if (r.destroy) r.destroy(); }
+        var imgs = [];
+        if (py.runPython("import sys\n'matplotlib.pyplot' in sys.modules")) {
+          var p = py.runPython([
+            'import io, base64', 'import matplotlib.pyplot as _plt', '_imgs = []',
+            'for _n in _plt.get_fignums():',
+            '    _b = io.BytesIO(); _plt.figure(_n).savefig(_b, format="png", dpi=90, bbox_inches="tight"); _imgs.append(base64.b64encode(_b.getvalue()).decode())',
+            "_plt.close('all')", '_imgs'].join('\n'));
+          imgs = p.toJs(); p.destroy();
+        }
+        out.innerHTML = '<pre>' + esc(text || '(출력 없음 — 실행 완료)') + '</pre>' + imgs.map(function (b) { return '<img alt="실행 결과 그래프" src="data:image/png;base64,' + b + '">'; }).join('');
+        if (key.indexOf(':lab') > 0 && !S.labs[key]) { S.labs[key] = today(); save(); addXP(5, '코딩 실습'); checkBadges(); }
+      });
+    }).catch(function (e) {
+      var lines = String(e && e.message || e).trim().split('\n');
+      out.className = 'code-out err';
+      out.innerHTML = '<pre>' + esc(text) + esc(lines[lines.length - 1]) + '</pre><div class="muted" style="font-size:13px">❗ 오류가 났어요. 마지막 줄을 읽고 코드를 고쳐 봐요. 앞 칸을 먼저 실행했는지도 확인해요.</div>';
+    }).then(function () { running = false; btn.disabled = false; });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-run],[data-copy],[data-reset]');
+    if (!b) return;
+    var box = b.closest('.code-box'); if (!box) return;
+    var key = box.getAttribute('data-key');
+    var ta = $('.code-edit', box);
+    var src = ta ? ta.value : CODES[key];
+    if (b.hasAttribute('data-copy')) {
+      (navigator.clipboard ? navigator.clipboard.writeText(src) : Promise.reject()).then(function () { toast('코드를 복사했어요'); }, function () { toast('복사하지 못했어요. 직접 선택해서 복사해요'); });
+    } else if (b.hasAttribute('data-reset')) {
+      if (ta) { ta.value = CODES[key]; delete EDITS[key]; }
+    } else runPython(key, src, $('.code-out', box), b);
+  });
+  document.addEventListener('input', function (e) {
+    if (!e.target.classList || !e.target.classList.contains('code-edit')) return;
+    var box = e.target.closest('.code-box'); if (box) EDITS[box.getAttribute('data-key')] = e.target.value;
+  });
+  document.addEventListener('keydown', function (e) {
+    // 코드 칸에서 Tab은 들여쓰기(공백 4칸), Shift+Enter는 실행
+    if (!e.target.classList || !e.target.classList.contains('code-edit')) return;
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault(); var t = e.target, st = t.selectionStart;
+      t.value = t.value.slice(0, st) + '    ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = st + 4;
+      t.dispatchEvent(new Event('input', { bubbles: true }));
+    } else if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault(); var r = $('[data-run]', e.target.closest('.code-box')); if (r) r.click();
+    }
+  });
 
   // ---------- 용어 카드 게임 ----------
   function renderGame(l) {

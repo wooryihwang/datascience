@@ -41,7 +41,7 @@ for (const u of units) {
       const w = '레슨 ' + l.id;
       if (ids.has(l.id)) errs.push(w + ': id 중복'); ids.add(l.id);
       for (const k of ['title', 'storyTitle', 'pages', 'goals', 'story', 'steps', 'summary', 'terms', 'test']) if (!l[k]) errs.push(w + ': ' + k + ' 없음');
-      if (l.story && (!Array.isArray(l.story.paragraphs) || l.story.paragraphs.length < 4)) warns.push(w + ': 이야기 문단 4개 미만');
+      if (l.story && (!Array.isArray(l.story.paragraphs) || l.story.paragraphs.length < 2)) warns.push(w + ': 이야기 문단 2개 미만');
       if (!l.steps || l.steps.length < 4 || l.steps.length > 5) errs.push(w + ': 계단은 4~5개 (현재 ' + (l.steps || []).length + ')');
       (l.steps || []).forEach((s, i) => {
         if (!s.title || !Array.isArray(s.body) || !s.body.length) errs.push(w + ' 계단' + (i + 1) + ': title/body 없음');

@@ -25,13 +25,13 @@ window.DS_DATA.units.push({
           goals: ["...할 수 있다.", "..."],    // 2~3개
           story: {
             title: "📖 이야기 제목",
-            paragraphs: ["문단1", "문단2", "..."],   // 5~7문단. 고등학생 주인공 1인칭 짧은 이야기. 레슨 핵심 개념에 대한 궁금증을 만들고 답은 주지 않음.
+            paragraphs: ["문단1", "문단2", "..."],   // 2~3문단, 합계 250~350자. 고등학생 주인공 1인칭 짧은 이야기. 핵심 궁금증 하나만 만들고 답은 주지 않음.
             question: "🤔 이야기 끝 질문"
           },
           steps: [              // 정확히 4~5개 (계단)
             {
               title: "계단 제목",
-              body: ["<p>HTML 문단</p>", "<p>...</p>"],  // 교과서 내용을 쉬운 말로 풀어 쓴 설명. 허용 태그: p, b, strong, em, ul, ol, li, br, code, span, sub, sup
+              body: ["<p>HTML 문단</p>", "<p>...</p>"],  // PPT처럼: 첫 줄 <p> 한 문장 + <ul><li><b>핵심어</b> — 짧은 설명</li> 3~6개 (긴 문단 금지, _source/CONDENSE_BRIEF.md 참고). 허용 태그: p, b, strong, em, ul, ol, li, br, code, span, sub, sup
               table: { head: ["열1","열2"], rows: [["a","b"]] },   // 선택
               code: { lang: "python", src: "print(1)" },          // 선택 (교과서에 코드가 있을 때)
               tip: "💡 알아두기 내용 (선택)",
